@@ -63,7 +63,6 @@ ssize_t onebyte_write(struct file *filep,
         loff_t *f_pos)
 {
     /*please complete the function on your own*/
-    ssize_t size;
     ssize_t rc = message_size;
     
     /*use helper function from libfs to safely copy user space data to 
@@ -77,7 +76,7 @@ ssize_t onebyte_write(struct file *filep,
      * @count: the maximum number of bytes to read
      */
     
-    size = simple_write_to_buffer(onebyte_data, message_size, f_pos, buf , count);
+    rc = simple_write_to_buffer(onebyte_data, message_size, f_pos, buf , count);
     if (count > 1) rc = -ENOSPC;
     return rc;
 }
