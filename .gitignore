@@ -1,7 +1,7 @@
 # Ignore everything
-*
+*/*
 
 # But not these files...
 !.gitignore
-!cs5250/one_byte_driver.c
-!cs5250/Makefile
+!assignment3/one_byte_driver.c
+!assignment3/Makefile
