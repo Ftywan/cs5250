@@ -42,7 +42,6 @@ ssize_t onebyte_read(struct file *filep,
         size_t len, 
         loff_t *f_pos)
 {
-    /*please complete the function on your own*/
     /*use helper function from libfs to properly copy data from 
      kernel space to user space
      ssize_t simple_read_from_buffer(void __user *to, size_t count, loff_t *ppos,
@@ -62,7 +61,6 @@ ssize_t onebyte_write(struct file *filep,
         size_t count, 
         loff_t *f_pos)
 {
-    /*please complete the function on your own*/
     ssize_t rc = message_size;
     
     /*use helper function from libfs to safely copy user space data to 
