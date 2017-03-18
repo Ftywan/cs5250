@@ -45,7 +45,16 @@ ssize_t onebyte_read(struct file *filep,
     /*please complete the function on your own*/
     /*use helper function from libfs to properly copy data from 
      kernel space to user space
+     ssize_t simple_read_from_buffer(void __user *to, size_t count, loff_t *ppos,
+                                            const void *from, size_t available)
+     * 
+     * @to: the user space buffer to read to
+     * @count: the maximum number of bytes to read
+     * @ppos: the current position in the buffer
+     * @from: the buffer to read from
+     * @available: the size of the buffer
      */
+    
     return simple_read_from_buffer(buf, len, f_pos, onebyte_data, message_size); 
 }
 ssize_t onebyte_write(struct file *filep, 
@@ -54,6 +63,23 @@ ssize_t onebyte_write(struct file *filep,
         loff_t *f_pos)
 {
     /*please complete the function on your own*/
+    ssize_t size;
+    ssize_t rc = message_size;
+    
+    /*use helper function from libfs to safely copy user space data to 
+     kernel space
+     ssize_t simple_write_to_buffer(void *to, size_t available, loff_t *ppos,
+                                    const void __user *from, size_t count)
+     * @to: the buffer to write to
+     * @available: the size of the buffer
+     * @ppos: the current position in the buffer
+     * @from: the user space buffer to read from
+     * @count: the maximum number of bytes to read
+     */
+    
+    size = simple_write_to_buffer(onebyte_data, message_size, f_pos, buf , count);
+    if (count > 1) rc = -ENOSPC;
+    return rc;
 }
 static int onebyte_init(void)
 {
