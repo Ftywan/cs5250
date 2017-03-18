@@ -4,4 +4,4 @@
 # But not these files...
 !.gitignore
 !cs5250/one_byte_driver.c
-!Makefile
+!cs5250/Makefile
