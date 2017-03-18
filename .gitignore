@@ -1,7 +1,7 @@
-# Ignore everything
+# Ignore all
 */*
 
-# But not these files...
+# except...
 !.gitignore
 !assignment3/one_byte_driver.c
 !assignment3/Makefile
