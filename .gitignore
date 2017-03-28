@@ -5,3 +5,4 @@
 !.gitignore
 !assignment3/one_byte_driver.c
 !assignment3/Makefile
+!assignment2/*
