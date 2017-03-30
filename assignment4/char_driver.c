@@ -27,7 +27,7 @@ struct file_operations char_fops = {
     release: char_release
 };
 char *onebyte_data = NULL;
-const ssize_t message_size = 1UL << 22;
+const size_t message_size = 1UL << 22;
 int char_open(struct inode *inode, struct file *filep)
 {
     return 0; // always successful
