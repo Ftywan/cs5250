@@ -6,8 +6,10 @@ rm -rf /dev/char_driver
 echo "removed char driver"
 mknod /dev/char_driver c 61 0
 echo "created a new char driver"
-make
-echo "finished compiling char driver"
+make clean
+echo "finished cleaning files"
+make all
+echo "finished compiling char_driver"
 insmod char_driver.ko
 echo "inserted char driver"
 gcc char_test.c -o char_test -g -Wall

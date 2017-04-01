@@ -3,6 +3,7 @@
 #include <fcntl.h>  
 #include <unistd.h>
 #include <string.h>
+#include <linux/errno.h>
 
 int char_driver;  
 const size_t four_meg_length = 1UL << 22;
@@ -39,13 +40,13 @@ int main(int argc, char **argv) {
  
     if (char_driver == -1) {  
         printf("unable to open char_driver.");  
-        exit(EXIT_FAILURE);  
+        exit(-EACCES);  
     }
     
     char *long_string = (char *)calloc(max_length, sizeof(char));
     if (long_string == 0) {
         printf("ERROR: Out of memory\n");
-        exit(EXIT_FAILURE);
+        exit(-ENOMEM);
     }
     
     char *head_pointer = long_string;
@@ -64,7 +65,7 @@ int main(int argc, char **argv) {
                                       * pointer to the data (hence -4) */
     
     copied_bytes = write(char_driver, long_string, max_length);
-    printf("Copied number of bytes is %zu.\n", copied_bytes);
+    printf("Number of bytes copied is %zu.\n", copied_bytes);
     
     free(long_string);
     close(char_driver); 

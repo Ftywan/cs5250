@@ -21,49 +21,6 @@
 #define SEEK_CUR 1
 #define SEEK_END 2
 #define SCULL_IOC_MAXNR 4
-//#define SCULL_QUANTUM 4000
-//#define SCULL_QSET    1000
-//
-//int scull_quantum = SCULL_QUANTUM;
-//int scull_qset =    SCULL_QSET;
-//
-//struct scull_qset {
-//    void **data;
-//    struct scull_qset *next;
-//};
-//
-//struct scull_dev {
-//    struct scull_qset *data;  /* Pointer to first quantum set */
-//    int quantum;              /* the current quantum size */
-//    int qset;                 /* the current array size */
-//    unsigned long size;       /* amount of data stored here */
-//    unsigned int access_key;  /* used by sculluid and scullpriv */
-//    struct semaphore sem;     /* mutual exclusion semaphore     */
-//    struct cdev cdev;	  /* Char device structure		*/
-//};
-//
-//int scull_trim(struct scull_dev *dev)
-//{
-//    struct scull_qset *next, *dptr;
-//    int qset = dev->qset;   /* "dev" is not-null */
-//    int i;
-//
-//    for (dptr = dev->data; dptr; dptr = next) { /* all the list items */
-//        if (dptr->data) {
-//            for (i = 0; i < qset; i++)
-//                kfree(dptr->data[i]);
-//            kfree(dptr->data);
-//            dptr->data = NULL;
-//        }
-//        next = dptr->next;
-//        kfree(dptr);
-//    }
-//    dev->size = 0;
-//    dev->quantum = scull_quantum;
-//    dev->qset = scull_qset;
-//    dev->data = NULL;
-//    return 0;
-//}
 
 int char_open(struct inode *inode, struct file *filep);
 int char_release(struct inode *inode, struct file *filep);
@@ -71,7 +28,6 @@ long char_ioctl(struct file *filp, unsigned int cmd, unsigned long arg);
 ssize_t char_read(struct file *filep, 
         char *buf, size_t count, 
         loff_t *f_pos);
-
 ssize_t char_write(struct file *filep, 
         const char *buf, size_t count, 
         loff_t *f_pos);
@@ -91,20 +47,11 @@ struct file_operations char_fops = {
 
 char *char_data = NULL;
 const size_t message_size = 1UL << 22;
+const size_t lseek_size = 10;
 char dev_msg[30];
-//size_t current_size = 1;
 
 int char_open(struct inode *inode, struct file *filep)
 {
-//    struct scull_dev *dev; /* device information */
-//
-//    dev = container_of(inode->i_cdev, struct scull_dev, cdev);
-//    filep->private_data = dev; /* for other methods */
-//
-//    /* now trim to 0 the length of the device if open was write-only */
-//    if ( (filep->f_flags & O_ACCMODE) == O_WRONLY) {
-//        scull_trim(dev); /* ignore errors */
-//    }
     return 0; // always successful
 }
 int char_release(struct inode *inode, struct file *filep)
@@ -152,7 +99,6 @@ loff_t char_lseek(struct file *file,
         loff_t offset,
         int whence)
 {
-//    struct scull_dev *dev = file->private_data;
     loff_t new_pos;
 
     switch(whence)
@@ -164,14 +110,13 @@ loff_t char_lseek(struct file *file,
             new_pos = file->f_pos + offset;
             break;
         case SEEK_END:
-//            new_pos = dev->size + offset;
-            new_pos = 10 + offset;
+            new_pos = lseek_size + offset;
             break;
         default: /* can't happen */
             return -EINVAL;
     }          
     
-    if( new_pos < 0 ) new_pos = -EINVAL;
+    if(new_pos < 0) new_pos = -EINVAL;
     file->f_pos = new_pos;
 
     return new_pos;
