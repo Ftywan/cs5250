@@ -13,13 +13,14 @@
 #define MAJOR_NUMBER 61/* forward declaration */
 #define SCULL_IOC_MAGIC  'k' 
 #define SCULL_HELLO _IO(SCULL_IOC_MAGIC, 1) 
-#define SCULL_WRITE _IOW(SCULL_IOC_MAGIC, 2, char *) 
-#define SCULL_READ _IOR(SCULL_IOC_MAGIC, 3, char *) 
+#define SCULL_W _IOW(SCULL_IOC_MAGIC, 2, char *) 
+#define SCULL_R _IOR(SCULL_IOC_MAGIC, 3, char *)
+#define SCULL_WR _IOWR(SCULL_IOC_MAGIC, 4, char *) 
 
 #define SEEK_SET 0
 #define SEEK_CUR 1
 #define SEEK_END 2
-#define SCULL_IOC_MAXNR 14
+#define SCULL_IOC_MAXNR 4
 //#define SCULL_QUANTUM 4000
 //#define SCULL_QSET    1000
 //
@@ -88,7 +89,7 @@ struct file_operations char_fops = {
     unlocked_ioctl: char_ioctl
 };
 
-char *onebyte_data = NULL;
+char *char_data = NULL;
 const size_t message_size = 1UL << 22;
 char dev_msg[30];
 //size_t current_size = 1;
@@ -127,7 +128,7 @@ ssize_t char_read(struct file *filep,
      * @available: the size of the buffer
      */
     
-    return simple_read_from_buffer(buf, len, f_pos, onebyte_data, message_size); 
+    return simple_read_from_buffer(buf, len, f_pos, char_data, message_size); 
 }
 ssize_t char_write(struct file *filep, 
         const char *buf,
@@ -145,7 +146,7 @@ ssize_t char_write(struct file *filep,
      * @count: the maximum number of bytes to read
      */
 
-    return simple_write_to_buffer(onebyte_data, message_size, f_pos, buf, count);
+    return simple_write_to_buffer(char_data, message_size, f_pos, buf, count);
 }
 loff_t char_lseek(struct file *file,
         loff_t offset,
@@ -178,7 +179,7 @@ loff_t char_lseek(struct file *file,
 long char_ioctl(struct file *filp, unsigned int cmd, unsigned long arg) 
 { 
     int err = 0; 
-    int retval = 0; 
+    ssize_t retval = 0; 
     /* 
       * extract the type and number bitfields, and don't decode 
       * wrong cmds: return ENOTTY (inappropriate ioctl) before access_ok() 
@@ -187,31 +188,40 @@ long char_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
     if (_IOC_NR(cmd) > SCULL_IOC_MAXNR) return -ENOTTY; 
       /* 
       * the direction is a bitmask, and VERIFY_WRITE catches R/W 
-      * transfers. `Type' is user‐oriented, while 
+      * transfers. 'Type' is user‐oriented, while 
       * access_ok is kernel‐oriented, so the concept of "read" and 
       * "write" is reversed 
       */ 
     if (_IOC_DIR(cmd) & _IOC_READ) 
-
-    err = !access_ok(VERIFY_WRITE, (void __user *)arg, _IOC_SIZE(cmd)); 
+        err = !access_ok(VERIFY_WRITE, (void __user *)arg, _IOC_SIZE(cmd)); 
     else if (_IOC_DIR(cmd) & _IOC_WRITE) 
-
-    err =  !access_ok(VERIFY_READ, (void __user *)arg, _IOC_SIZE(cmd)); 
+        err =  !access_ok(VERIFY_READ, (void __user *)arg, _IOC_SIZE(cmd)); 
     if (err) return -EFAULT; 
     
     switch(cmd) { 
         case SCULL_HELLO: 
             printk(KERN_WARNING "hello\n"); 
             break; 
-        case SCULL_READ:
-            if (copy_to_user((char *)arg, dev_msg, 30)) return -EACCES;
+        case SCULL_R:
+            if (copy_to_user((char *)arg, dev_msg, sizeof(dev_msg))) 
+                retval = -EACCES;
             break;
-        case SCULL_WRITE:
-            if (copy_from_user(dev_msg, (char *)arg, 30)) return -EACCES; 
+        case SCULL_W:
+            if (copy_from_user(dev_msg, (char *)arg, sizeof(dev_msg))) 
+                retval = -EACCES; 
             printk(KERN_INFO "user said: '%s'\n", dev_msg);
             break;
+        case SCULL_WR:
+            retval = copy_from_user(dev_msg, (char *)arg, sizeof(dev_msg));
+            printk(KERN_INFO "user said: '%s'\n", dev_msg);
+            printk(KERN_INFO "retval = %zu'\n", retval);
+            if (retval == 0) {
+                retval = copy_to_user((char *)arg, dev_msg, sizeof(dev_msg));
+            }
+            break;
         default:  /* redundant, as cmd was checked against MAXNR */ 
-            return -ENOTTY; 
+            retval = -ENOTTY; 
+            break;
     } 
     
     return retval; 
@@ -228,28 +238,28 @@ static int char_init(void)
     // kmalloc is just like malloc, the second parameter is
     // the type of memory to be allocated.
     // To release the memory allocated by kmalloc, use kfree.
-    onebyte_data = kmalloc(message_size, GFP_KERNEL);
-    memset(onebyte_data, 0, message_size);
+    char_data = kmalloc(message_size, GFP_KERNEL);
+    memset(char_data, 0, message_size);
     
-    if (!onebyte_data) {
+    if (!char_data) {
         char_exit();
         // cannot allocate memory
         // return no memory error, negative signify a failure
         return -ENOMEM;
     }
     // initialize the value to be X
-    *onebyte_data = 'X';
+    *char_data = 'X';
     printk(KERN_ALERT "Device module with size %zu loaded.\n", 
-        ksize(onebyte_data));
+        ksize(char_data));
     return 0;
 }
 static void char_exit(void)
 {
     // if the pointer is pointing to something
-    if (onebyte_data) {
+    if (char_data) {
         // free the memory and assign the pointer to NULL
-        kfree(onebyte_data);
-        onebyte_data = NULL;
+        kfree(char_data);
+        char_data = NULL;
     }
     // unregister the device
     unregister_chrdev(MAJOR_NUMBER, "onebyte");
