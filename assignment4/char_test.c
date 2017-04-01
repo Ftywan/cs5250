@@ -10,7 +10,7 @@ const size_t max_length = 1UL << 22;
 int main(void) { 
     
     char_driver = open("/dev/char_driver", O_RDWR, 0644);  
-    ssize_t rc;
+    ssize_t copied_bytes;
  
     if (char_driver == -1) {  
         printf("unable to open char_driver.");  
@@ -30,11 +30,11 @@ int main(void) {
     }
     
     memcpy(long_string, "HEAD", 4);
-    memset(head_pointer, 'x', max_length - 4);
+    memset(head_pointer, '\0', max_length - 4);
     memcpy(tail_pointer, "TAIL", 4);
     
-    rc = write(char_driver, long_string, max_length);
-    printf("Return code of write function is %zu.\n", rc);
+    copied_bytes = write(char_driver, long_string, max_length);
+    printf("Copied number of bytes is %zu.\n", copied_bytes);
     
     free(long_string);
     close(char_driver);  
