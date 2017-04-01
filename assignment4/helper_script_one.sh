@@ -16,3 +16,5 @@ gcc test.c -o test -g -Wall
 echo "compiled test.c"
 gcc test2.c -o test2 -g -Wall
 echo "compiled test2.c"
+dmesg -C
+echo "cleared dmesg contents"

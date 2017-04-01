@@ -15,6 +15,55 @@
 #define READ_WRITE 1
 
 int char_driver; 
+void test();
+void read_and_write();
+void read_write();
+
+int main(int argc, char **argv) 
+{ 
+    int rc = 0;
+    char_driver = open("/dev/char_driver", O_RDWR); 
+    if (char_driver == -1) { 
+        perror("unable to open lcd"); 
+        exit(EXIT_FAILURE); 
+    }
+    
+    printf("\n");
+    if (argc == 1 || argc > 2) {
+        printf("Simple testbench to test ioctl functions.\n");
+        printf("_IOR, _IOW and _IOWR are implemented in this testbench.\n");
+        printf("Only one parameter can be passed at a time.\n");
+        printf("\nAllowed values:\n");
+        printf("\t-T, --test\n");
+        printf("\t\tto run initial test only\n");
+        printf("\t-RAW, --read_and_write\n");
+        printf("\t\tto run _IOR and _IOW only\n");
+        printf("\t--RW, --read_write\n");
+        printf("\t\tto run  _IOWR only\n");
+        printf("\t-A, --all\n");
+        printf("\t\tto run all tests\n");
+    } else if (!strcmp(argv[1], "--test") || !strcmp(argv[1], "-T")) 
+        test();
+    else if (!strcmp(argv[1], "--read_and_write") || !strcmp(argv[1], "-RAW")) 
+        read_and_write();
+    else if (!strcmp(argv[1], "--read_write") || !strcmp(argv[1], "-RW")) 
+        read_write();
+    else if (!strcmp(argv[1], "--all") || !strcmp(argv[1], "-A")) {
+        printf("INIT Test:\n");
+        test();
+        printf("\nREAD_AND_WRITE Test:\n");
+        read_and_write();
+        printf("\nREAD_WRITE Test:\n");
+        read_write();
+    } else {
+        printf("invalid command \"%s\" passed. exiting now.\n", argv[1]);
+        rc = -1;
+    }
+
+    printf("\n");
+    close(char_driver); 
+    return rc; 
+} 
 
 void test() 
 { 
@@ -29,7 +78,7 @@ void test()
     
     k = ioctl(char_driver, SCULL_HELLO); 
     if (k == -1) perror("hello:");
-    printf("result = %d\n", k);  
+    printf("ioctl result = %d\n", k);  
 } 
 
 void read_and_write() {
@@ -39,15 +88,16 @@ void read_and_write() {
     
     memset(user_msg, '\0', 30);
     
-    printf("\n## setting value \"%s\" in kernel. ##\n", sample);
+    printf("\nsetting value \"%s\" in kernel.\n", sample);
     k = ioctl(char_driver, SCULL_W, sample); 
     if (k == -1) perror("write:");
-    printf("result = %d\n", k); 
+    printf("ioctl result = %d\n", k); 
     
-    printf("\n## user_msg value before ioctl call: \"%s\" ##\n", user_msg);
+    printf("\nuser_msg value before ioctl call: \"%s\" \n", user_msg);
     k = ioctl(char_driver, SCULL_R, user_msg);
     if (k == -1) perror("read:");
     printf("user_msg value after ioctl call: \"%s\"\n", user_msg); 
+    printf("ioctl result = %d\n", k); 
 }
 
 void read_write() {
@@ -56,45 +106,14 @@ void read_write() {
     char user_msg[30];
     
     memset(user_msg, '\0', 30);
-    printf("\n## setting dev_msg value using ioctl_rw ##\n");
+    printf("\nsetting dev_msg value using _IOWR call\n");
     k = ioctl(char_driver, SCULL_WR, sample);
     if (k == -1) perror("write:");
-    printf("result = %d\n", k); 
+    printf("ioctl result = %d\n", k); 
     
-    printf("\n## getting value of dev_msg and saving it in user_msg thru rw ##\n");
-    printf("kernel said: \"%s\"\n", sample);
+    printf("\ngetting value of dev_msg and saving it in user_msg thru _IOWR\n");
     k = ioctl(char_driver, SCULL_WR, user_msg);
     if (k == -1) perror("read:");
-    printf("result = %d\n", k); 
+    printf("kernel said: \"%s\"\n", user_msg);
+    printf("ioctl result = %d\n", k); 
 }
-
-int main(int argc, char **argv) 
-{ 
-    int rc = 0;
-    char_driver = open("/dev/char_driver", O_RDWR); 
-    if (char_driver == -1) { 
-        perror("unable to open lcd"); 
-        exit(EXIT_FAILURE); 
-    }
-    
-    if (argc == 1) {
-        printf("Allowed values:\n");
-        printf("\t --test to run test only\n");
-        printf("\t --read_and_write to run _IOR and _IOW only\n");
-        printf("\t --read_write to run _IOWR only\n");
-        printf("\t --all to run all tests\n");
-    } else if (!strcmp(argv[1], "--test")) test();
-    else if (!strcmp(argv[1], "--read_and_write")) read_and_write();
-    else if (!strcmp(argv[1], "--read_write")) read_write();
-    else if (!strcmp(argv[1], "--all")) {
-        test();
-        read_and_write();
-        read_write();
-    } else {
-        printf("invalid command \"%s\" passed. exiting now.\n", argv[1]);
-        rc = -1;
-    }
-
-    close(char_driver); 
-    return rc; 
-} 

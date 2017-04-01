@@ -180,6 +180,7 @@ long char_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 { 
     int err = 0; 
     ssize_t retval = 0; 
+    char tmp[30];
     /* 
       * extract the type and number bitfields, and don't decode 
       * wrong cmds: return ENOTTY (inappropriate ioctl) before access_ok() 
@@ -209,15 +210,18 @@ long char_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
         case SCULL_W:
             if (copy_from_user(dev_msg, (char *)arg, sizeof(dev_msg))) 
                 retval = -EACCES; 
-            printk(KERN_INFO "user said: '%s'\n", dev_msg);
+            printk(KERN_INFO "user said: \"%s\"\n", dev_msg);
             break;
         case SCULL_WR:
+            memcpy(tmp, dev_msg, sizeof(dev_msg)); /*copy current dev_msg value 
+                                                    * to tmp since dev_msg will
+                                                    * be used to store user 
+                                                    * space data */
             retval = copy_from_user(dev_msg, (char *)arg, sizeof(dev_msg));
-            printk(KERN_INFO "user said: '%s'\n", dev_msg);
-            printk(KERN_INFO "retval = %zu'\n", retval);
             if (retval == 0) {
-                retval = copy_to_user((char *)arg, dev_msg, sizeof(dev_msg));
+                retval = copy_to_user((char *)arg, tmp, sizeof(dev_msg));
             }
+            printk(KERN_INFO "changed from \"%s\" to \"%s\"", tmp, dev_msg);
             break;
         default:  /* redundant, as cmd was checked against MAXNR */ 
             retval = -ENOTTY; 

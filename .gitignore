@@ -17,7 +17,8 @@
 !assignment4/char_driver.c
 !assignment4/helper_script_one.sh
 !assignment4/Makefile
-!assignment4/tester_script_one.sh
+!assignment4/test_1a.sh
+!assignment4/test_1b.sh
 !assignment4/char_test.c
 !assignment4/test2.c
 !assignment4/test.c
