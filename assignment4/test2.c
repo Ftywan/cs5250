@@ -105,7 +105,7 @@ void read_write() {
     const char sample[] = "hello kernel using rw!";
     char user_msg[30];
     
-    memset(user_msg, '\0', 30);
+    memset(user_msg, 0, 30);
     printf("\nsetting dev_msg value using _IOWR call\n");
     k = ioctl(char_driver, SCULL_WR, sample);
     if (k == -1) perror("write:");

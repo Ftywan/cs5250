@@ -17,9 +17,6 @@
 #define SCULL_R _IOR(SCULL_IOC_MAGIC, 3, char *)
 #define SCULL_WR _IOWR(SCULL_IOC_MAGIC, 4, char *) 
 
-#define SEEK_SET 0
-#define SEEK_CUR 1
-#define SEEK_END 2
 #define SCULL_IOC_MAXNR 4
 
 int char_open(struct inode *inode, struct file *filep);
