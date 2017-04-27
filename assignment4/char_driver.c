@@ -115,7 +115,7 @@ loff_t char_lseek(struct file *file,
     
     if(new_pos < 0) new_pos = -EINVAL;
     file->f_pos = new_pos;
-
+    
     return new_pos;
 }
 long char_ioctl(struct file *filp, unsigned int cmd, unsigned long arg) 
@@ -152,7 +152,7 @@ long char_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
         case SCULL_W:
             if (copy_from_user(dev_msg, (char *)arg, sizeof(dev_msg))) 
                 retval = -EACCES; 
-            printk(KERN_INFO "user said: \"%s\"\n", dev_msg);
+            printk(KERN_WARNING "user said: \"%s\"\n", dev_msg);
             break;
         case SCULL_WR:
             memcpy(tmp, dev_msg, sizeof(dev_msg)); /*copy current dev_msg value 
@@ -163,7 +163,7 @@ long char_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
             if (retval == 0) {
                 retval = copy_to_user((char *)arg, tmp, sizeof(dev_msg));
             }
-            printk(KERN_INFO "changed from \"%s\" to \"%s\"", tmp, dev_msg);
+            printk(KERN_WARNING "changed from \"%s\" to \"%s\"", tmp, dev_msg);
             break;
         default:  /* redundant, as cmd was checked against MAXNR */ 
             retval = -ENOTTY; 
@@ -185,8 +185,6 @@ static int char_init(void)
     // the type of memory to be allocated.
     // To release the memory allocated by kmalloc, use kfree.
     char_data = kmalloc(message_size, GFP_KERNEL);
-    memset(char_data, 0, message_size);
-    
     if (!char_data) {
         char_exit();
         // cannot allocate memory
@@ -194,6 +192,8 @@ static int char_init(void)
         return -ENOMEM;
     }
     // initialize the value to be X
+    
+    memset(char_data, 0, message_size);
     *char_data = 'X';
     printk(KERN_ALERT "Device module with size %zu loaded.\n", 
         ksize(char_data));
